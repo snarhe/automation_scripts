@@ -61,38 +61,76 @@ def disk_util():
             return NEWDISK, OSRELEASE
         def lv_add():
             NEWDISK, OSRELEASE = disk_scan()
-            print "DISK:{}\nOS:{}".format(NEWDISK,OSRELEASE)
-            stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | grep Disk | cut -d' ' -f3".format(NEWDISK))
-            NDISKS = int(stdout.read().decode("utf-8"))
-            LSIZEM = (LSIZE * 1024) - 1024
-            if LSIZEM <= NDISKS:
-                stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
-                PVMESSAGE = stdout.read().rstrip().decode("utf-8")
-                print PVMESSAGE
-                stdin, stdout, stderr = ssh.exec_command("vgcreate {} /dev/{}".format(VOLUME,NEWDISK))
-                VGMESSAGE = stdout.read().rstrip().decode("utf-8")
-                print VGMESSAGE
-                stdin, stdout, stderr = ssh.exec_command("lvcreate -L +{}M -n {} {}".format(LSIZE * 1024,LVOLUME,VOLUME))
-                LVMESSAGE = stdout.read().rstrip().decode("utf-8")
-                print LVMESSAGE
-                stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
-                if OSRELEASE == 'el7':
-                    stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
-                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       xfs     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
-                elif OSRELEASE == 'el6':
+            def file_format(OS,VG,LV):
+                if OS == 'el7':
+                    stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(VG,LV))
+                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       xfs     defaults        0 0" >> /etc/fstab'.format(VG,LV,LV))
+                elif OS == 'el6':
                     stdin, stdout, stderr = ssh.exec_command("mkfs.ext4 /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
-                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       ext4     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
+                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       ext4     defaults        0 0" >> /etc/fstab'.format(VG,LV,LV))
                 else:
-                    print "OS version not supported"
-                    stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
-                    stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
-                    stdin, stdout, stderr = ssh.exec_command("vgremove {}".format(VOLUME))
-                    stdin, stdout, stderr = ssh.exec_command("pvremove /dev/{}".format(NEWDISK))
-                stdin, stdout, stderr = ssh.exec_command("mount -a")
-                MOUNTMESSAGE = stdout.read().decode("utf-8")
-                print MOUNTMESSAGE
+                    return "False"
+            stdin, stdout, stderr = ssh.exec_command("vgs {} --separator , --units m --noheadings | grep -o '[^,]*$'".format(VOLUME))
+            SVOLUME = stdout.read().decode("utf-8")
+            if SVOLUME:
+                if float(SVOLUME[0].rstrip('m')) - 1024.00 >= LSIZE:
+                    stdin, stdout, stderr = ssh.exec_command("lvcreate -L {}M -n {} {}".format(LSIZE * 1024,LVOLUME,VOLUME))
+                    SLVMESSAGE = stdout.read().decode("utf-8")
+                    stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
+                    FILEOUT = file_format(OSRELEASE,VOLUME,LVOLUME)
+                    if FILEOUT == "False":
+                        print "OS version not supported"
+                        stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
+                        stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
+                elif NEWDISK:
+                    stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
+                    PVMESSAGE = stdout.read().rstrip().decode("utf-8")
+                    print PVMESSAGE
+                    stdin, stdout, stderr = ssh.exec_command("vgextend {} /dev/{}".format(VOLUME,NEWDISK))
+                    VGMESSAGE = stdout.read().rstrip().decode("utf-8")
+                    print VGMESSAGE
+                    stdin, stdout, stderr = ssh.exec_command("vgs {} --separator , --units m --noheadings | grep -o '[^,]*$'".format(VOLUME))
+                    HDVOLUME = stdout.read().decode("utf-8")
+                    if float(HDVOLUME[0].rstrip('m')) - 1024.00 >= LSIZE:
+                       stdin, stdout, stderr = ssh.exec_command("lvcreate -L {}M -n {} {}".format(LSIZE * 1024,LVOLUME,VOLUME))
+                       SLVMESSAGE = stdout.read().decode("utf-8")
+                       stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
+                       FILEOUT = file_format(OSRELEASE,VOLUME,LVOLUME)
+                       if FILEOUT == "False":
+                           print "OS version not supported"
+                           stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
+                           stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
+                else:
+                    print "Required space not available on VG"
+            elif NEWDISK:
+                stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | grep Disk | cut -d' ' -f3".format(NEWDISK))
+                NDISKS = int(stdout.read().decode("utf-8"))
+                LSIZEM = (LSIZE * 1024) - 1024
+                if LSIZEM <= NDISKS:
+                    stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
+                    PVMESSAGE = stdout.read().rstrip().decode("utf-8")
+                    print PVMESSAGE
+                    stdin, stdout, stderr = ssh.exec_command("vgcreate {} /dev/{}".format(VOLUME,NEWDISK))
+                    VGMESSAGE = stdout.read().rstrip().decode("utf-8")
+                    print VGMESSAGE
+                    stdin, stdout, stderr = ssh.exec_command("lvcreate -L +{}M -n {} {}".format(LSIZE * 1024,LVOLUME,VOLUME))
+                    LVMESSAGE = stdout.read().rstrip().decode("utf-8")
+                    print LVMESSAGE
+                    stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
+                    FILEOUT = file_format(OSRELEASE,VOLUME,LVOLUME)
+                    if FILEOUT == "False":
+                        print "OS version not supported"
+                        stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
+                        stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                        stdin, stdout, stderr = ssh.exec_command("vgremove {}".format(VOLUME))
+                        stdin, stdout, stderr = ssh.exec_command("pvremove /dev/{}".format(NEWDISK))
+                    stdin, stdout, stderr = ssh.exec_command("mount -a")
+                    MOUNTMESSAGE = stdout.read().decode("utf-8")
+                    print MOUNTMESSAGE
+                else:
+                    print "Required Space not available on Disk"
             else:
-                print "Required Space not available on Disk"
+                 print "Disk not attached to machine"
         lv_add()    
 #        MOUNTNAME = stdout.read().splitlines()
 #        print MOUNTNAME
