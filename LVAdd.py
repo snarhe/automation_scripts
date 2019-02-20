@@ -65,14 +65,14 @@ def disk_util():
             stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | grep Disk | cut -d' ' -f3".format(NEWDISK))
             NDISKS = int(stdout.read().decode("utf-8"))
             LSIZEM = (LSIZE * 1024) - 1024
-            if LSIZEM >= LSIZE:
+            if LSIZEM <= NDISKS:
                 stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
                 PVMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print PVMESSAGE
                 stdin, stdout, stderr = ssh.exec_command("vgcreate {} /dev/{}".format(VOLUME,NEWDISK))
                 VGMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print VGMESSAGE
-                stdin, stdout, stderr = ssh.exec_command("lvcreate -L +{}M -n {} {}".format(LSIZEM,LVOLUME,VOLUME))
+                stdin, stdout, stderr = ssh.exec_command("lvcreate -L +{}M -n {} {}".format(LSIZE * 1024,LVOLUME,VOLUME))
                 LVMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print LVMESSAGE
                 stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
