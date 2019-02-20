@@ -33,7 +33,7 @@ def get_args():
     parser.add_argument('-s','--server', help='Server IP/Hostname', required=True)
     parser.add_argument('-v','--volume', help='Volume group name', required=False)
     parser.add_argument('-l','--lvolume', help='Logical volume name', required=False)
-    parser.add_argument('-o','--operation' help="LV operation add/extend", required=True)
+    parser.add_argument('-o','--operation', help="LV operation add/extend", required=True)
     parser.add_argument('-ls','--lsize', type=int, help="Logical Volume Size in GB", required=True)
     arguments = parser.parse_args()
     HOST = arguments.server
@@ -53,33 +53,34 @@ def disk_util():
             stdin, stdout, stderr = ssh.exec_command("ls /sys/class/scsi_host/ | wc -l")
             SCSICOUNT = int(stdout.read().decode("utf-8"))
             stdin, stdout, stderr = ssh.exec_command("for((i=0;i<${};i=i+1));do `echo $i >> /tmp/path.txt`;done".format(SCSICOUNT))
-            stdin, stdout, stderr = ssh.exec_command("for SPATH in `cat /tmp/path.txt`; do `echo "/sys/class/scsi_host/host$SPATH/scan";echo "- - -"  > /sys/class/scsi_host/host$SPATH/scan`;done")
+            stdin, stdout, stderr = ssh.exec_command('for SPATH in `cat /tmp/path.txt`; do `echo "/sys/class/scsi_host/host$SPATH/scan";echo "- - -"  > /sys/class/scsi_host/host$SPATH/scan`;done')
             stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW; fi; done")
-            NEWDISK = stdout.read().decode("utf-8")
+            NEWDISK = stdout.read().rstrip().decode("utf-8")
             stdin, stdout, stderr = ssh.exec_command("uname -r | awk -F'.' '{print $(NF-1)}'")
-            OSRELEASE = stdout.read().decode("utf-8")
+            OSRELEASE = stdout.read().rstrip().decode("utf-8")
             return NEWDISK, OSRELEASE
         def lv_add():
             NEWDISK, OSRELEASE = disk_scan()
-            stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | awk '/Disk/ {print $3}'".format(NEWDISK))
+            print "DISK:{}\nOS:{}".format(NEWDISK,OSRELEASE)
+            stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | grep Disk | cut -d' ' -f3".format(NEWDISK))
             NDISKS = int(stdout.read().decode("utf-8"))
             LSIZEM = (LSIZE * 1024) - 1024
             if LSIZEM >= LSIZE:
                 stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
-                PVMESSAGE = stdout.read().decode("utf-8")
+                PVMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print PVMESSAGE
                 stdin, stdout, stderr = ssh.exec_command("vgcreate {} /dev/{}".format(VOLUME,NEWDISK))
-                VGMESSAGE = stdout.read().decode("utf-8")
+                VGMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print VGMESSAGE
-                stdin, stdout, stderr = ssh.exec_command("lvcreate -L {}M -n {} {}".format(LSIZEM,LVOLUME,VOLUME))
-                LVMESSAGE = stdout.read().decode("utf-8")
+                stdin, stdout, stderr = ssh.exec_command("lvcreate -L +{}M -n {} {}".format(LSIZEM,LVOLUME,VOLUME))
+                LVMESSAGE = stdout.read().rstrip().decode("utf-8")
                 print LVMESSAGE
                 stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
                 if OSRELEASE == 'el7':
-                    stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
                     stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       xfs     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
                 elif OSRELEASE == 'el6':
-                    stdin, stdout, stderr = ssh.exec_command("mkfs.ext4 /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("mkfs.ext4 /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
                     stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       ext4     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
                 else:
                     print "OS version not supported"
@@ -92,30 +93,29 @@ def disk_util():
                 print MOUNTMESSAGE
             else:
                 print "Required Space not available on Disk"
-            
-        MOUNTNAME = stdout.read().splitlines()
-        print MOUNTNAME
-        if MOUNTNAME:
-            LVPATH = MOUNTNAME[0].split()[0]
-            FILEFORMAT = MOUNTNAME[0].split()[2]
-            stdin, stdout, stderr = ssh.exec_command("lvdisplay {}".format(LVPATH))
-            LVDETAILS = stdout.read().splitlines()
-            LVNAME = LVDETAILS[2].split()[2]
-            VGNAME = LVDETAILS[3].split()[2]
-            stdin, stdout, stderr = ssh.exec_command("vgs --noheadings {}".format(VGNAME))
-            FREEVG = stdout.read().split()[6].rstrip('g')
-            if int(FREEVG) > EXTEND:
-                
-            print LVNAME
-            print VGNAME
-            print FREEVG
-        else:
-            print "Mount point not available on server"
+        lv_add()    
+#        MOUNTNAME = stdout.read().splitlines()
+#        print MOUNTNAME
+#        if MOUNTNAME:
+#            LVPATH = MOUNTNAME[0].split()[0]
+#            FILEFORMAT = MOUNTNAME[0].split()[2]
+#            stdin, stdout, stderr = ssh.exec_command("lvdisplay {}".format(LVPATH))
+#            LVDETAILS = stdout.read().splitlines()
+#            LVNAME = LVDETAILS[2].split()[2]
+#            VGNAME = LVDETAILS[3].split()[2]
+#            stdin, stdout, stderr = ssh.exec_command("vgs --noheadings {}".format(VGNAME))
+#            FREEVG = stdout.read().split()[6].rstrip('g')
+#            if int(FREEVG) > EXTEND:
+#                
+#            print LVNAME
+#            print VGNAME
+#            print FREEVG
+#        else:
+#            print "Mount point not available on server"
 #Enable below lines only if Python 3.3 anb above
 #    except TimeoutError as err:
 #        print "Unable to connect {}".format(Host)
     except paramiko.AuthenticationException as error:
         print "{} Authentication failed".format(Host)
-
-extend_disk()
+disk_util()
 
