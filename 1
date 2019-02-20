@@ -1,0 +1,41 @@
+import paramiko, argparse
+
+USER = "root"
+ssh_port = 22
+ssh_key = paramiko.RSAKey.from_private_key_file("/root/.ssh/id_rsa")
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s','--server', help='Server IP/Hostname(Multiple values with comma separated)', required=True, nargs='+')
+    parser.add_argument('-r','--restart', type=int, help='Restart server After Pre Checks', required=False)
+    parser.add_argument('-sd','--shutdown', type=int, help='ShutDown server after Pre Checks', required=False)
+    parser.add_argument('-ch','--check', type=str, help='Check action pre/post', required=True)
+    arguments = parser.parse_args()
+    HOST = arguments.server[0].split(",")
+    RESTART = arguments.restart
+    SHUTDOWN = arguments.shutdown
+    CHECK = arguments.check
+    return HOST, RESTART, SHUTDOWN, CHECK
+
+HOST, RESTART, SHUTDOWN, CHECK = get_args()
+
+def get_health(HOST):
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname=Host,port=ssh_port,username=USER,pkey=ssh_key)
+        stdin, stdout, stderr = ssh.exec_command("hostname")
+        HOSTNAME = stdout.read().decode("utf-8")
+        stdin, stdout, stderr = ssh.exec_command("uname -r")
+        KERNEL_Version = stdout.read().decode("utf-8")
+        stdin, stdout, stderr = ssh.exec_command("who -b | awk '{print $3,$4}'")
+        LAST_BOOT = stdout.read().decode("utf-8")
+        stdin, stdout, stderr = ssh.exec_command("lsof -Pnl +M -i4 | awk '$NF ~ /(LISTEN)/ {print $1,$(NF-1)}'")
+        SERVICES = stdout.read().decode("utf-8")
+        return HOSTNAME, KERNEL_Version, LAST_BOOT, SERVICES
+    except TimeoutError as err:
+        return "Unable to connect {}".format(Host)
+    except paramiko.AuthenticationException as error:
+        return "{} Authentication failed".format(Host)
+print HOST
+get_health(HOST)

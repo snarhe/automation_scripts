@@ -1,0 +1,42 @@
+login to database
+#psql -U postgres -W 
+password is redhat
+
+Create user
+#create user bulkemail;
+
+Set password to user
+#create user bulkemail password 'bulkemail';
+
+Create database
+#create schema bulkemail;
+
+Grant permission
+#grant all on all tables in schema bulkemail to bulkemail;
+
+List all DB
+#\l
+
+Change DB
+#\c
+
+List db
+#\dt
+
+Create Table
+#create table newuser (srno integer, firstname varchar, lastname varchar, email varchar primary key, password varchar);
+
+Example 2
+CREATE TABLE link (
+ ID serial PRIMARY KEY,
+ url VARCHAR (255) NOT NULL,
+ name VARCHAR (255) NOT NULL,
+ description VARCHAR (255),
+ rel VARCHAR (50)
+);
+
+Insert values
+#INSERT INTO newuser(srno, firstname, lastname, email, password) values (01, 'Sunil', 'Narhe', 's.narhe@yahoo.in', 'password');
+
+
+
