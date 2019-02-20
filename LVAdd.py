@@ -27,7 +27,6 @@ script_file_nm = path.basename(__file__).split(".")[0]
 server_nm = gethostname()
 email_bot_subject = "AUR-"+str(script_file_nm)
 
--s 192.168.230.184 -v vdata -l ldata -o add -ls 2
 #Getting argument passed to script
 def get_args():
     parser = argparse.ArgumentParser()
@@ -35,7 +34,7 @@ def get_args():
     parser.add_argument('-v','--volume', help='Volume group name', required=False)
     parser.add_argument('-l','--lvolume', help='Logical volume name', required=False)
     parser.add_argument('-o','--operation' help="LV operation add/extend", required=True)
-    parser.add_argument('-ls','--lsize', type=float, help="Logical Volume Size in GB", required=True)
+    parser.add_argument('-ls','--lsize', type=int, help="Logical Volume Size in GB", required=True)
     arguments = parser.parse_args()
     HOST = arguments.server
     VOLUME = arguments.volume
@@ -45,12 +44,55 @@ def get_args():
     return HOST, VOLUME, LVOLUME, OPERATION, LSIZE
 HOST, VOLUME, LVOLUME, OPERATION, LSIZE = get_args()
 
-def extend_disk():
+def disk_util():
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname=HOST,port=ssh_port,username=USER,pkey=ssh_key)
-        stdin, stdout, stderr = ssh.exec_command("grep -w {} /etc/fstab".format(PARTITION))
+        def disk_scan():
+            stdin, stdout, stderr = ssh.exec_command("ls /sys/class/scsi_host/ | wc -l")
+            SCSICOUNT = int(stdout.read().decode("utf-8"))
+            stdin, stdout, stderr = ssh.exec_command("for((i=0;i<${};i=i+1));do `echo $i >> /tmp/path.txt`;done".format(SCSICOUNT))
+            stdin, stdout, stderr = ssh.exec_command("for SPATH in `cat /tmp/path.txt`; do `echo "/sys/class/scsi_host/host$SPATH/scan";echo "- - -"  > /sys/class/scsi_host/host$SPATH/scan`;done")
+            stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW; fi; done")
+            NEWDISK = stdout.read().decode("utf-8")
+            stdin, stdout, stderr = ssh.exec_command("uname -r | awk -F'.' '{print $(NF-1)}'")
+            OSRELEASE = stdout.read().decode("utf-8")
+            return NEWDISK, OSRELEASE
+        def lv_add():
+            NEWDISK, OSRELEASE = disk_scan()
+            stdin, stdout, stderr = ssh.exec_command("fdisk -l /dev/{} | awk '/Disk/ {print $3}'".format(NEWDISK))
+            NDISKS = int(stdout.read().decode("utf-8"))
+            LSIZEM = (LSIZE * 1024) - 1024
+            if LSIZEM >= LSIZE:
+                stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
+                PVMESSAGE = stdout.read().decode("utf-8")
+                print PVMESSAGE
+                stdin, stdout, stderr = ssh.exec_command("vgcreate {} /dev/{}".format(VOLUME,NEWDISK))
+                VGMESSAGE = stdout.read().decode("utf-8")
+                print VGMESSAGE
+                stdin, stdout, stderr = ssh.exec_command("lvcreate -L {}M -n {} {}".format(LSIZEM,LVOLUME,VOLUME))
+                LVMESSAGE = stdout.read().decode("utf-8")
+                print LVMESSAGE
+                stdin, stdout, stderr = ssh.exec_command("mkdir /{}".format(LVOLUME))
+                if OSRELEASE == 'el7':
+                    stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       xfs     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
+                elif OSRELEASE == 'el6':
+                    stdin, stdout, stderr = ssh.exec_command("mkfs.ext4 /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command('echo -E "/dev/mapper/{}-{}   /{}                       ext4     defaults        0 0" >> /etc/fstab'.format(VOLUME,LVOLUME,LVOLUME))
+                else:
+                    print "OS version not supported"
+                    stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(LVOLUME,VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("vgremove {}".format(VOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("pvremove /dev/{}".format(NEWDISK))
+                stdin, stdout, stderr = ssh.exec_command("mount -a")
+                MOUNTMESSAGE = stdout.read().decode("utf-8")
+                print MOUNTMESSAGE
+            else:
+                print "Required Space not available on Disk"
+            
         MOUNTNAME = stdout.read().splitlines()
         print MOUNTNAME
         if MOUNTNAME:
