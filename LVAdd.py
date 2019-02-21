@@ -52,9 +52,8 @@ def disk_util():
         def disk_scan():
             stdin, stdout, stderr = ssh.exec_command("ls /sys/class/scsi_host/ | wc -l")
             SCSICOUNT = int(stdout.read().decode("utf-8"))
-            stdin, stdout, stderr = ssh.exec_command("rm -rf /tmp/scandisk.txt")
-            stdin, stdout, stderr = ssh.exec_command('for((i=0;i<{};i=i+1));do `echo $i >> /tmp/scandisk.txt`;done'.format(SCSICOUNT))
-            stdin, stdout, stderr = ssh.exec_command("for SPATH in `cat /tmp/scandisk.txt`; do `echo '- - -'  > /sys/class/scsi_host/host$SPATH/scan`;done")
+            for SCANCOUNT in range(SCSICOUNT):
+                stdin, stdout, stderr = ssh.exec_command("echo '- - -' > /sys/class/scsi_host/host{}/scan".format(SCANCOUNT))
             stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW; fi; done")
             NEWDISK = stdout.read().rstrip().decode("utf-8")
             stdin, stdout, stderr = ssh.exec_command("uname -r | awk -F'.' '{print $(NF-1)}'")
