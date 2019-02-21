@@ -51,9 +51,9 @@ def disk_util():
         ssh.connect(hostname=HOST,port=ssh_port,username=USER,pkey=ssh_key)
         def disk_scan():
             stdin, stdout, stderr = ssh.exec_command("ls /sys/class/scsi_host/ | wc -l")
-            SCSICOUNT = int(stdout.read().decode("utf-8"))
+            SCSICOUNT = int(stdout.read().rstrip().decode("utf-8"))
             for SCANCOUNT in range(SCSICOUNT):
-                stdin, stdout, stderr = ssh.exec_command("echo '- - -' > /sys/class/scsi_host/host{}/scan".format(SCANCOUNT))
+                stdin, stdout, stderr = ssh.exec_command('echo "- - -" > /sys/class/scsi_host/host{}/scan'.format(SCANCOUNT))
             stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW; fi; done")
             NEWDISK = stdout.read().rstrip().decode("utf-8")
             stdin, stdout, stderr = ssh.exec_command("uname -r | awk -F'.' '{print $(NF-1)}'")
@@ -61,6 +61,8 @@ def disk_util():
             return NEWDISK, OSRELEASE
         def lv_add():
             NEWDISK, OSRELEASE = disk_scan()
+            print "Disk: {}".format(NEWDISK)
+            print "OS: {}".format(OSRELEASE)
             def file_format(OS,VG,LV):
                 if OS == 'el7':
                     stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(VG,LV))
@@ -87,6 +89,7 @@ def disk_util():
                         stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
                         stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
                 elif NEWDISK:
+                    print "Checking in New Disk"
                     stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
                     PVMESSAGE = stdout.read().rstrip().decode("utf-8")
                     print PVMESSAGE
