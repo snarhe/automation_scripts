@@ -61,8 +61,6 @@ def disk_util():
             return NEWDISK, OSRELEASE
         def lv_add():
             NEWDISK, OSRELEASE = disk_scan()
-            print "Disk: {}".format(NEWDISK)
-            print "OS: {}".format(OSRELEASE)
             def file_format(OS,VG,LV):
                 if OS == 'el7':
                     stdin, stdout, stderr = ssh.exec_command("mkfs.xfs /dev/mapper/{}-{}".format(VG,LV))
@@ -109,6 +107,7 @@ def disk_util():
                            print "OS version not supported"
                            stdin, stdout, stderr = ssh.exec_command("rmdir /{}".format(LVOLUME))
                            stdin, stdout, stderr = ssh.exec_command("lvremove -f /dev/mapper/{}-{}".format(VOLUME,LVOLUME))
+                    stdin, stdout, stderr = ssh.exec_command("mount -a")
                 else:
                     print "Required space not available on existing VG"
             elif NEWDISK:
