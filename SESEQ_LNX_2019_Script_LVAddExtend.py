@@ -190,3 +190,27 @@ def disk_util():
         print "{} Authentication failed".format(Host)
 disk_util()
 
+#BOT_CODE_PART_2
+script_end_dt = strftime("%Y-%m-%d %H:%M:%S")
+email_message = """From:{}
+To:{}
+Subject:{}
+##AUR_START##
+AutomationName:{}
+EndPointName:{}
+StartTime:{}
+DurationToFinish:{}
+StatusOfRun:Success
+ExecutionID:{}
+InputType:Email
+##AUR_END##""".format(email_bot_from_address,email_bot_to_address,email_bot_subject,script_file_nm,server_nm,script_start_dt,script_end_dt,bot_execution_id)
+
+#Sending Email
+try:
+    smtpObj = smtplib.SMTP(smtp_server,smtp_port)
+    smtpObj.sendmail(email_bot_from_address,email_bot_to_address,email_message)
+    return True
+except smtplib.SMTPException:
+    return False
+
+#End of Section
