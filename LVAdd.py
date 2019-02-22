@@ -54,7 +54,7 @@ def disk_util():
             SCSICOUNT = int(stdout.read().rstrip().decode("utf-8"))
             for SCANCOUNT in range(SCSICOUNT):
                 stdin, stdout, stderr = ssh.exec_command('echo "- - -" > /sys/class/scsi_host/host{}/scan'.format(SCANCOUNT))
-            stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW; fi; done")
+            stdin, stdout, stderr = ssh.exec_command("for NEW in `lsblk -f | awk '$2 ~ /^[ ]*$/ {print $1}'`; do blkid | grep $NEW > /dev/null ; if [ `echo $?` -ne 0 ] ; then echo $NEW | grep -v sr0; fi; done")
             NEWDISK = stdout.read().rstrip().decode("utf-8")
             stdin, stdout, stderr = ssh.exec_command("uname -r | awk -F'.' '{print $(NF-1)}'")
             OSRELEASE = stdout.read().rstrip().decode("utf-8")
@@ -139,25 +139,50 @@ def disk_util():
                     print "Required Space not available on Disk"
             else:
                  print "Disk not attached to machine"
-        lv_add()    
-#        MOUNTNAME = stdout.read().splitlines()
-#        print MOUNTNAME
-#        if MOUNTNAME:
-#            LVPATH = MOUNTNAME[0].split()[0]
-#            FILEFORMAT = MOUNTNAME[0].split()[2]
-#            stdin, stdout, stderr = ssh.exec_command("lvdisplay {}".format(LVPATH))
-#            LVDETAILS = stdout.read().splitlines()
-#            LVNAME = LVDETAILS[2].split()[2]
-#            VGNAME = LVDETAILS[3].split()[2]
-#            stdin, stdout, stderr = ssh.exec_command("vgs --noheadings {}".format(VGNAME))
-#            FREEVG = stdout.read().split()[6].rstrip('g')
-#            if int(FREEVG) > EXTEND:
-#                
-#            print LVNAME
-#            print VGNAME
-#            print FREEVG
-#        else:
-#            print "Mount point not available on server"
+        def lv_extend():
+            NEWDISK, OSRELEASE = disk_scan()
+            stdin, stdout, stderr = ssh.exec_command("df | grep -w {} | cut -d' ' -f1".format(LVOLUME))
+            LVNAME = stdout.read().rstrip().decode("utf-8")
+            print LVNAME
+            stdin, stdout, stderr = ssh.exec_command("lvs --noheadings {} | cut -d' ' -f4".format(LVNAME))
+            VGNAME = stdout.read().rstrip().decode("utf-8")
+            stdin, stdout, stderr = ssh.exec_command("vgs {} --separator , --units m --noheadings | grep -o '[^,]*$'".format(VGNAME))
+            VGSIZE = stdout.read().decode("utf-8")
+            MVGSIZE = float(VGSIZE.replace('m',"").rstrip())
+            def os_lvextend(OS,LV):
+                stdin, stdout, stderr = ssh.exec_command("lvextend -L +{}M {}".format(LSIZE * 1024,LV))
+                LVEXTENDM = stdout.read().rstrip().decode("utf-8")
+                print LVEXTENDM
+                if OS == 'el7':
+                    print "Perfroming xfs grow for {}".format(LV)
+                    stdin, stdout, stderr = ssh.exec_command("xfs_growfs {}".format(LV))
+                elif OS == 'el6':
+                    stdin, stdout, stderr = ssh.exec_command("resize2fs {}".format(LV))
+                    print "Performing resize of {}".format(LV)
+                else:
+                    print "OS version not supported"
+            if (MVGSIZE - 512.00) >= (LSIZE * 1024):
+                print "Extending from existing VG"   
+                os_lvextend(OSRELEASE,LVNAME)
+            elif NEWDISK:
+                print "Extending from New Disk"
+                stdin, stdout, stderr = ssh.exec_command("pvcreate /dev/{}".format(NEWDISK))
+                stdin, stdout, stderr = ssh.exec_command("vgextend {} /dev/{}".format(VGNAME,NEWDISK))
+                stdin, stdout, stderr = ssh.exec_command("vgs {} --separator , --units m --noheadings | grep -o '[^,]*$'".format(VGNAME))
+                HDVOLUME = stdout.read().decode("utf-8")
+                FHDVOLUME = float(HDVOLUME.replace('m',"").rstrip())
+                if float(FHDVOLUME - 512.00) >= (LSIZE * 1024):
+                    os_lvextend(OSRELEASE,LVNAME)
+                else:
+                    print "Required space not available on New Disk"
+            else:
+                print "Required space not available on existing VG"
+        if OPERATION == "add":
+            lv_add()
+        elif OPERATION == "extend":
+            lv_extend()
+        else:
+            print "Operation not permitted. Use add/extend only"
 #Enable below lines only if Python 3.3 anb above
 #    except TimeoutError as err:
 #        print "Unable to connect {}".format(Host)
