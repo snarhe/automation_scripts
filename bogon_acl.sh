@@ -4,8 +4,10 @@ MAINLOG="/var/log/bogon-acl.log"
 TEMPLOG="/tmp/temp_check.log"
 DATE=`date +%Y-%m-%d`
 #BINDSERVER="192.168.152.86"
+#BINDSERVER="gerdnsbndpas01"
 BINDSERVER="192.168.40.145"
 ACLFILEDIR=/var/named/chroot/etc
+EMAIL="sunil.narhe@capgemini.com"
 
 function SCRIPT_DOWNLOAD(){
 echo "Downloading Updated IP file" >> $MAINLOG
@@ -34,8 +36,8 @@ fi
 URL_CHECK
 
 function SCRIPT_COPY(){
-#scp $BINDSERVER/$ACLFILEDIR/bogon_acl.conf $SCRIPTFOLDER/bogon_acl_$DATE.conf
-cp $ACLFILEDIR/bogon_acl.conf $SCRIPTFOLDER/bogon_acl_$DATE.conf
+scp root@$BINDSERVER:$ACLFILEDIR/bogon_acl.conf $SCRIPTFOLDER/bogon_acl_$DATE.conf
+#cp $ACLFILEDIR/bogon_acl.conf $SCRIPTFOLDER/bogon_acl_$DATE.conf
 if [ $? -eq 0 ]; then
 	echo "Latest ACL file copied successfully" >> $MAINLOG
         chmod 755 $SCRIPTFOLDER/bogon_acl_$DATE.conf
@@ -79,6 +81,7 @@ do
 done
 echo -e "</table><p><br/><br/> <br />Regards,<br/>Unix Team.<br/>Email: sunil.narhe@capgemini.com</p></body></html>" >> $SCRIPTFOLDER/bogon_acl.html
 rm -rf /tmp/NEWIP.txt
+cat $SCRIPTFOLDER/bogon_acl.html | mail -s "$(echo -e "[GEFCO-BOGON]NEW IP LIST\nContent-Type: text/html")" $EMAIL
 }
 
 function BIND_MODIFY(){
@@ -95,6 +98,7 @@ if [[ $SCRIPT_COPY_STATUS == 0 ]] && [[ $SCRIPT_DOWNLOAD_STATUS == 0 ]]; then
                 fi
 	done < "$SCRIPTFOLDER/bogon-bn-agg.txt"
         EMAIL_NOTIFY
+        #scp $SCRIPTFOLDER/bogon_acl_$DATE.conf root@$BINDSERVER:$ACLFILEDIR/bogon_acl.conf
 else
 	echo "[Failed] Please check logs under $MAINLOG for error"
 fi
