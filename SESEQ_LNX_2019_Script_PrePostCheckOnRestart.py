@@ -138,8 +138,8 @@ InputType:Email
 try:
     smtpObj = smtplib.SMTP(smtp_server,smtp_port)
     smtpObj.sendmail(email_bot_from_address,email_bot_to_address,email_message)
-    return True
+    print "True"
 except smtplib.SMTPException:
-    return False
+    print "False"
 
 #End of Section
