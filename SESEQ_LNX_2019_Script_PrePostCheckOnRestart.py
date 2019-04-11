@@ -11,7 +11,8 @@ from os import path
 from socket import gethostname
 
 #Input Section
-smtp_server = "192.168.208.219"
+#smtp_server = "192.168.208.219"
+smtp_server = "localhost"
 smtp_port = 25
 email_bot_from_address = "noreply@seq.com"
 email_bot_to_address = "hpoperations.in@capgemini.com"
@@ -138,8 +139,9 @@ InputType:Email
 try:
     smtpObj = smtplib.SMTP(smtp_server,smtp_port)
     smtpObj.sendmail(email_bot_from_address,email_bot_to_address,email_message)
-    print "True"
+    #print "Mail Sent"
 except smtplib.SMTPException:
-    print "False"
+    #print "Mail Not Sent"
+    pass
 
 #End of Section
