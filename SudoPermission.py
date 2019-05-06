@@ -1,7 +1,7 @@
-#Script Name: sudopermission
+#Script Name: Sudopermission
 #Version: V1.0
-#Developer: Sunil Narhe<sunil.narhe@capgemini.com>
-#Description: This script help to generate script execution count
+#Developer: Sunil Narhe<sunil.narhe@mailserver.com>
+#Description: This script help to grant revoke sudo persmission
 
 #Load Python lib
 import smtplib, argparse, paramiko
@@ -11,7 +11,7 @@ from socket import gethostname
 
 
 #Input Section
-smtp_server = "192.168.208.219"
+smtp_server = "smtp.mailserver.com"
 smtp_port = 25
 script_start_dt = strftime("%Y-%m-%d %H:%M:%S")
 bot_execution_id = "Test001"
@@ -25,8 +25,8 @@ email_bot_subject = "AUR-"+str(script_file_nm)
 #Variable Section
 script_file_nm = path.basename(__file__)
 server_nm = gethostname()
-email_bot_from_address = "noreply@seq.com"
-email_bot_to_address = "hpoperations.in@capgemini.com"
+email_bot_from_address = "noreply@mailserver.com"
+email_bot_to_address = "hpoperations.in@mailserver.com"
 email_bot_subject = "AUR-"+str(script_file_nm)
 USER = 'root'
 PORT = 22

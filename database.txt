@@ -1,9 +1,0 @@
-1. NewUser(Sr(AutoIncrement),FNM, LNM, Email(Primary), Pass)
-2. EmailList(Sr, FNM, LNM, Email(uniq),MailingList)
-3. MailingList()
-MailingList
- a. Learning
- b. Tour
- c. HomeBuyer
-4. Reports(Sr., Date, Email, Status,Email_Content_ID)
-5. EMail_content(Sr. Date, Email_content_Id, Email_Containt)

@@ -1,7 +1,7 @@
-#Script Name: BOT Code
+#Script Name: Reset Root Password
 #Version: V1.0
-#Developer: Sunil Narhe<sunil.narhe@capgemini.com>
-#Description: This script perform the Pre and Post check of server
+#Developer: Sunil Narhe<sunil.narhe@mailserver.com>
+#Description: This script perform root password reser activity
 
 #Load Python lib
 import paramiko, argparse, glob, os, subprocess
@@ -11,10 +11,10 @@ from os import path
 from socket import gethostname
 
 #Input Section
-smtp_server = "192.168.208.219"
+smtp_server = "smtp.mailserver.com"
 smtp_port = 25
-email_bot_from_address = "noreply@seq.com"
-email_bot_to_address = "hpoperations.in@capgemini.com"
+email_bot_from_address = "noreply@mailserver.com"
+email_bot_to_address = "hpoperations.in@mailserver.com"
 bot_execution_id = "Test001"
 USER = "root"
 ssh_port = 22

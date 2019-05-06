@@ -3,11 +3,10 @@ SCRIPTFOLDER=/root/scripts
 MAINLOG="/var/log/bogon-acl.log"
 TEMPLOG="/tmp/temp_check.log"
 DATE=`date +%Y-%m-%d`
-#BINDSERVER="192.168.152.86"
-#BINDSERVER="gerdnsbndpas01"
+#BINDSERVER=""
 BINDSERVER="192.168.40.145"
 ACLFILEDIR=/var/named/chroot/etc
-EMAIL="sunil.narhe@capgemini.com"
+EMAIL="sunil.narhe@mailserver.com"
 
 function SCRIPT_DOWNLOAD(){
 echo "Downloading Updated IP file" >> $MAINLOG
@@ -79,7 +78,7 @@ for IP in `cat /tmp/NEWIP.txt`
 do
 	echo -e "<tr><td>$IP</td></tr>" >> $SCRIPTFOLDER/bogon_acl.html
 done
-echo -e "</table><p><br/><br/> <br />Regards,<br/>Unix Team.<br/>Email: sunil.narhe@capgemini.com</p></body></html>" >> $SCRIPTFOLDER/bogon_acl.html
+echo -e "</table><p><br/><br/> <br />Regards,<br/>Unix Team.<br/>Email: sunil.narhe@mailserver.com</p></body></html>" >> $SCRIPTFOLDER/bogon_acl.html
 rm -rf /tmp/NEWIP.txt
 cat $SCRIPTFOLDER/bogon_acl.html | mail -s "$(echo -e "[GEFCO-BOGON]NEW IP LIST\nContent-Type: text/html")" $EMAIL
 }

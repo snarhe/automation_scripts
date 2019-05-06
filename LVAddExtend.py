@@ -1,6 +1,6 @@
-#Script Name: BOT Code
+#Script Name: LV Disk Utility
 #Version: V1.0
-#Developer: Sunil Narhe<sunil.narhe@capgemini.com>
+#Developer: Sunil Narhe<sunil.narhe@mailserver.com>
 #Description: This script perform LVM Disk Utility 
 
 #Load Python lib
@@ -11,10 +11,10 @@ from os import path
 from socket import gethostname
 
 #Input Section
-smtp_server = "192.168.208.219"
+smtp_server = "smtp.mailserver.com"
 smtp_port = 25
-email_bot_from_address = "noreply@seq.com"
-email_bot_to_address = "hpoperations.in@capgemini.com"
+email_bot_from_address = "noreply@mailserver.com"
+email_bot_to_address = "hpoperations.in@mailserver.com"
 bot_execution_id = "Test001"
 USER = "root"
 ssh_port = 22
