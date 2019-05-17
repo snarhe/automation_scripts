@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+# ######################################################################################################################
+# ----------------------------------------------------------------------------------------------------------------------
+# Author of last commit: Sunil Narhe(sunil.narhe@capgemini.com)
+# Date : 2019-05-17
+# ----------------------------------------------------------------------------------------------------------------------
+#      
+#      PURPOSE: Check server sudo permission for Channel
+#
+#     
+#      LAST UPDATES (YYYY-MM-DD): 
+#
+######################################################################################################################
+
+set SERUNM [lindex $argv 0]
+set SERPASS [lindex $argv 1]
+set SERIP [lindex $argv 2]
+set timeout -1
+spawn ssh -o StrictHostKeyChecking=no -t $SERUNM@$SERIP
+expect "ssword:"
+send "$SERPASS\r"
+expect "\$ "
+send "sudo \-i\r"
+expect "\# "
+send  "hostname\r"
+expect "\# "
+send  "logout\r"
+expect "\$ "
+send "logout\r"
+interact
