@@ -11,7 +11,7 @@ from os import path
 from socket import gethostname
 
 #Input Section
-smtp_server = "smtp.mailserver.com"
+smtp_server = "localhost"
 smtp_port = 25
 email_bot_from_address = "noreply@mailserver.com"
 email_bot_to_address = "hpoperations.in@mailserver.com"
