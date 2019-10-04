@@ -97,14 +97,14 @@ ITICS Unix Team | Group IT
 Capgemini India | Mumbai – Airoli
 
 Address: Building No.8, MindSpace, Thane-Belapur Road, Airoli,Navi Mumbai 400708, India.
-www.capgemini.com
+www.domainname.com
 People matter, results count.
 _______________________________________________________________________
 Connect with us on
 
 NOTE :: “Please contact NE, ITICS Unix Team for faster response
 
-" | mail -r spacewalk@capgemini.com -s "[North]RHEL-7 Reposysnc Status `date +%d-%b-%Y`" groupitunix.global@capgemini.com > /var/log/reposync_mail.log
+" | mail -r spacewalk@domainname.com -s "[North]RHEL-7 Reposysnc Status `date +%d-%b-%Y`" groupitunix.global@domainname.com > /var/log/reposync_mail.log
 
 
 

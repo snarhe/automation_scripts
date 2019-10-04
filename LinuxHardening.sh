@@ -472,7 +472,7 @@ echo -e "| evidence of such monitoring to law enforcement officials.       |" >>
 echo -e "|                                                                 |" >> /tmp/ssh_banner
 echo -e "|               If you have any questions or need support         |" >> /tmp/ssh_banner
 echo -e "|               Please e-mail Group IT ServiceDesk                |" >> /tmp/ssh_banner
-echo -e "|               E-mail: ithelp.global@capgemini.com         	   |" >> /tmp/ssh_banner
+echo -e "|               E-mail: ithelp.global@domainname.com         	   |" >> /tmp/ssh_banner
 echo -e "|                                                                 |" >> /tmp/ssh_banner
 echo -e "+-----------------------------------------------------------------+" >> /tmp/ssh_banner
 

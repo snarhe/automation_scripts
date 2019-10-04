@@ -28,7 +28,7 @@ echo -e "\t--help: To print this help menu";
 echo -e ""
 echo -e "\tExample:"
 echo -e "\t   1) Access privide to single repository";
-echo -e "\t       sh svn_access.sh --single --url https://ddw-svn-preprod.capgemini.com/svn/repos/repoforpt01 --user snarhe --remove";
+echo -e "\t       sh svn_access.sh --single --url https://ddw-svn-preprod.domainname.com/svn/repos/repoforpt01 --user snarhe --remove";
 echo -e "\t       sh svn_access.sh --single --repo /var/www/svn/ddw-preprod_internet/repoforpt40 --remove --user snarhe";
 echo -e "\t       Note: You can also provide multiple users with comma(,) separated values like sunil,santosh,aniket";
 echo -e "\t   2) Access provide to multple repository"
@@ -50,25 +50,25 @@ IndexOf()    {
 RepoDir()
 {
     local repoUrl=$1
-    if [[ $repUrl == 'coconet-svn-in-01.capgemini.com' ]]
+    if [[ $repUrl == 'coconet-svn-in-01.domainname.com' ]]
     then
         repo_dir="/var/www/svn/cc1_ind_1004"
-    elif [[ $repoUrl == 'coconet-svn-osnl-01.pp.fr.capgemini.com' ]]
+    elif [[ $repoUrl == 'coconet-svn-osnl-01.pp.fr.domainname.com' ]]
     then
         repo_dir="/var/www/svn/coconet-svn-osnl"
-    elif [[ $repoUrl == 'ddw-svn-preprod-ci.capgemini.com' ]]
+    elif [[ $repoUrl == 'ddw-svn-preprod-ci.domainname.com' ]]
     then
         repo_dir="/var/www/svn/ddw-preprod_ci"
-    elif [[ $repoUrl == 'ddw-svn-preprod-intranet.capgemini.com' ]]
+    elif [[ $repoUrl == 'ddw-svn-preprod-intranet.domainname.com' ]]
     then
         repo_dir="/var/www/svn/ddw-preprod_intranet"
-    elif [[ $repoUrl == 'ddw-svn-preprod.capgemini.com' ]]
+    elif [[ $repoUrl == 'ddw-svn-preprod.domainname.com' ]]
     then
         repo_dir="/var/www/svn/ddw-preprod_internet"
-    elif [[ $repoUrl == 'scm-coconet-uat.capgemini.com' ]]
+    elif [[ $repoUrl == 'scm-coconet-uat.domainname.com' ]]
     then
         repo_dir="/var/www/svn/scm-coconet-uat"
-    elif [[ $repoUrl == 'scm-coconet2-int.capgemini.com' ]]
+    elif [[ $repoUrl == 'scm-coconet2-int.domainname.com' ]]
     then
         repo_dir="/var/www/svn/scm-coconet2-int"
     else

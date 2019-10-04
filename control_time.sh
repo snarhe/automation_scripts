@@ -1,7 +1,7 @@
 #!/bin/bash
 # ######################################################################################################################
 # ----------------------------------------------------------------------------------------------------------------------
-# Author : Sunil Narhe (sunil.narhe@capgemini.com) 
+# Author : Sunil Narhe (sunil.narhe@domainname.com) 
 # Date of last commit: 2019-05-14
 # ----------------------------------------------------------------------------------------------------------------------
 #      script created by Sunil Narhe - 2019-05-14 (YYYY-MM-DD)
@@ -68,7 +68,7 @@ do
 	echo -e "<tr><td>$SysHost</td><td>$SysDay $SysMonth $SysDate $SysTime $SysZone $SysYear</td></tr>" >> $SCRIPTFOLDER/control_time.html
 	fi
 done < $templog
-echo -e "</table><p><br/><br/> <br />Regards,<br/>Unix Team.<br/>Email: sunil.narhe@capgemini.com</p></body></html>" >> $SCRIPTFOLDER/control_time.html
+echo -e "</table><p><br/><br/> <br />Regards,<br/>Unix Team.<br/>Email: sunil.narhe@domainname.com</p></body></html>" >> $SCRIPTFOLDER/control_time.html
 rm -rf $templog
 HTML_EMAIL
 #cat $SCRIPTFOLDER/control_time.html | mail -s "$(echo -e "ControlTime Systems date\nContent-Type: text/html")" $EMAIL
