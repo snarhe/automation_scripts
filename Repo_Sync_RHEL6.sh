@@ -2,7 +2,7 @@
 #Purpose : Download updated Packages and create repository
 #Date : 30th Sep 2016
 #Author : Sunil Narhe <sunil.narhe@domainname.com>
-#Modify<01>: 23rd May 2017 -- Add Errata download screipt -- Sunil Narhe
+#Modify<01>: 23rd May 2017 -- Add Errata download script -- Sunil Narhe
 #Modify<02>: 23rd May 2017 -- Move old repodata xml file to archive -- Sunil Narhe
 
 dt=`date +%Y-%m-%d`
@@ -77,17 +77,14 @@ End Date : `date`
 
 Thanks & Regards,
 _______________________________________________________________________
-ITICS Unix Team | Group IT
+Unix Team
 
-Capgemini India | Mumbai – Airoli
 
-Address: Building No.8, MindSpace, Thane-Belapur Road, Airoli,Navi Mumbai 400708, India.
 www.domainname.com
-People matter, results count.
 _______________________________________________________________________
 Connect with us on
 
-NOTE :: “Please contact NE, ITICS Unix Team for faster response
+NOTE :: “Please contact NE, Unix Team for faster response
 
 " | mail -r spacewalk@domainname.com -s "[North]RHEL-6 Reposysnc Status `date +%d-%b-%Y`" groupitunix.global@domainname.com > /var/log/reposync_mail.log
 
