@@ -15,7 +15,7 @@
 #            1. RHEL 7
 #      
 #      Silent feature:
-#            1. Back existing files before changes
+#            1. Backup existing files before changes
 #            2. Do not allow to add duplicates
 #            3. No need to follow argument sequence but value must be followed by argument
 #            4. Keeping logs with timestamp
