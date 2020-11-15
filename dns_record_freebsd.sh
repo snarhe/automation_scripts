@@ -1,5 +1,5 @@
 #!/usr/local/bin/bash
-set -x
+#set -x
 # ######################################################################################################################
 # 
 #      Name : dns_record.sh
@@ -29,8 +29,8 @@ set -x
 ######################################################################################################################
 
 #Configure DIR path and FILES
-DIR="/tmp"
-BDIR="/tmp/backup"
+DIR="/usr/local/etc/namedb/working"
+BDIR="/usr/local/etc/namedb/working/backup"
 FZONE="mkzone"
 RZONE="230.186.136.in-addr.arpa"
 log_file="/tmp/dns_record.log"
