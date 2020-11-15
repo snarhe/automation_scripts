@@ -1,5 +1,5 @@
 #!/usr/local/bin/bash
-#set -x
+set -x
 # ######################################################################################################################
 # 
 #      Name : dns_record.sh
@@ -10,10 +10,10 @@
 #      Author WhatsApp: https://wa.me/message/YXAIWEERBSVLA1
 #
 #      Requirement :
-#            1. GNU bash, version 5.0.18
+#            1. GNU bash, version 4.2.46
 #
 #      Test Environment:
-#            1. FreeBsd 12.1
+#            1. RHEL 7
 #      
 #      Silent feature:
 #            1. Backup existing files before changes
@@ -22,21 +22,21 @@
 #            4. Keeping logs with timestamp
 #
 #      Example:
-#            1. bash dns_record.sh --name test1 --ip 1.2.3.4 --add
-#            2. bash dns_record.sh --name test1 --ip 1.2.3.4 --remove 
+#            1. sh dns_record.sh --name test1 --ip 1.2.3.4 --add
+#            2. sh dns_record.sh --name test1 --ip 1.2.3.4 --remove 
 #      
 #
 ######################################################################################################################
 
 #Configure DIR path and FILES
-DIR="/usr/local/etc/namedb/working"
-BDIR="/usr/local/etc/namedb/working/backup"
+DIR="/tmp"
+BDIR="/tmp/backup"
 FZONE="mkzone"
 RZONE="230.186.136.in-addr.arpa"
 log_file="/tmp/dns_record.log"
 
 #Date
-DT=`date +%Y-%b-%d`
+DT=`date +%Y-%b-%d-%H-%M-%S`
 
 #Print Help menu
 HELP()
@@ -97,14 +97,14 @@ remove_record()
     local remover=$1 removeip=$2;
     backup_files
     log "Removing Record"
-    `sed -iBAK '/$remover    A    $removeip/d' "$DIR/$FZONE"`
-    `sed -iBAK '/$remover    A    $removeip/d' "$DIR/$RZONE"`
+    `sed -iBAK "/$remover    A    $removeip/d" "$DIR/$FZONE"`
+    `sed -iBAK "/$remover    A    $removeip/d" "$DIR/$RZONE"`
     log "DNS record removed"
 }
 
 service_refresh()
 {
-    `service named reload`
+    service named reload
     if [ `echo $?` == 0 ]
     then
         log "Service refresh sucessfully"
