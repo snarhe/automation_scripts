@@ -12,7 +12,7 @@
 #            1. GNU bash, version 4.2.46
 #
 #      Test Environment:
-#            1. RHEL 7
+#            1. CentOS 7
 #      
 #      Silent feature:
 #            1. Backup existing files before changes
@@ -27,27 +27,32 @@
 #
 ######################################################################################################################
 
+#DNS Configuration
+DOMAIN="virtumentor.in"
+PTR="192.168.101"
+
 #Configure DIR path and FILES
-DIR="/usr/local/etc/namedb/working"
-FZONE="mkzone"
-RZONE="230.186.136.in-addr.arpa"
+DIR="/etc/named/zones/"
+FZONE="db.virtumentor.in"
+RZONE="db.192.168.101"
+BDIR="/etc/named/zones/backup"
 log_file="/tmp/dns_record.log"
 
 #Date
-DT=`date +%Y-%b-%d`
+DT=`date +%Y-%b-%d-%H-%M-%S`
 
 #Print Help menu
 HELP()
 {
-echo "\t--name: name to add/remove";
-echo "\t--ip: IP to add/remove for DNS";
-echo "\t--refresh (optional): Refresh the records to immediately updates changes";
-echo "\t--add: To add a record";
-echo "\t--remove: To remove a record";
-echo "\t--help: To print this help menu";
+echo -e "\t--name: name to add/remove";
+echo -e "\t--ip: IP to add/remove for DNS";
+echo -e "\t--refresh (optional): Refresh the records to immediately updates changes";
+echo -e "\t--add: To add a record";
+echo -e "\t--remove: To remove a record";
+echo -e "\t--help: To print this help menu";
 echo ""
-echo "\tExample:"
-echo "\t   $sh dns_record.sh --add --name test1 --ip 1.1.1.1";
+echo -e "\tExample:"
+echo -e "\t   $sh dns_record.sh --add --name test1 --ip 1.1.1.1";
 }
 
 log() {
@@ -70,8 +75,8 @@ IndexOf()    {
 backup_files()
 {
     log "Creating backup"
-    `cp $DIR/$FZONE $DIR/$FZONE_$DT`
-    `cp $DIR/$RZONE $DIR/$RZONE_$DT`
+    `cp $DIR/$FZONE $BDIR/$FZONE_$DT`
+    `cp $DIR/$RZONE $BDIR/$RZONE_$DT`
 }
 
 add_record()
@@ -81,8 +86,9 @@ add_record()
     then
         backup_files
         log "Adding Record"
-        echo "$addr    A    $addip" >> $DIR/$FZONE
-        echo "$addr    A    $addip" >> $DIR/$RZONE
+        echo "$addr    IN    A    $addip" >> $DIR/$FZONE
+        PTRIP=`echo $addip | cut -d'.' -f4`
+        echo "$PTRIP    IN    PTR    $addr.$DOMAIN." >> $DIR/$RZONE
         log "DNS record added"
     else
         log "Name OR IP already exist"
@@ -95,14 +101,15 @@ remove_record()
     local remover=$1 removeip=$2;
     backup_files
     log "Removing Record"
-    `sed -i "/$remover    A    $removeip/d" "$DIR/$FZONE"`
-	`sed -i "/$remover    A    $removeip/d" "$DIR/$RZONE"`
-	log "DNS record removed"
+    `sed -i "/$remover    IN    A    $removeip/d" "$DIR/$FZONE"`
+    PTRIP=`echo $addip | cut -d'.' -f4`
+    `sed -i "/$PTRIP    IN    PTR    $remover.$DOMAIN./d" "$DIR/$RZONE"`
+    log "DNS record removed"
 }
 
 service_refresh()
 {
-    `service named reload`
+    `systemctl reload named`
     if [[ `echo $?` == 0 ]]
     then
         log "Service refresh sucessfully"
@@ -136,9 +143,9 @@ else
     then
         if [[ `echo $parameter_list | grep -e '--name' > /dev/null; echo $?` == 0 ]] && [[ `echo $parameter_list | grep -e '--ip' > /dev/null; echo $?` == 0 ]]
         then
-        	if [[ $# == 5 ]]
-        	then
-        	    fname_value
+            if [[ $# == 5 ]]
+            then
+                fname_value
                 fip_value
                 add_record $name_value $ip_value
                 service_refresh
@@ -152,9 +159,9 @@ else
         then
         if [[ `echo $parameter_list | grep -e '--name' > /dev/null; echo $?` == 0 ]] && [[ `echo $parameter_list | grep -e '--ip' > /dev/null; echo $?` == 0 ]]
         then
-         	if [[ $# == 5 ]]
-        	then
-        	    fname_value
+            if [[ $# == 5 ]]
+            then
+                fname_value
                 fip_value
                 remove_record $name_value $ip_value
                 service_refresh
