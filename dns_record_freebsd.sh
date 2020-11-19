@@ -1,5 +1,5 @@
 #!/usr/local/bin/bash
-#set -x
+set -x
 # ######################################################################################################################
 # 
 #      Name : dns_record.sh
@@ -28,9 +28,13 @@
 #
 ######################################################################################################################
 
+#DNS Configuration
+DOMAIN="virtumentor.in"
+PTR="192.168.101"
+
 #Configure DIR path and FILES
-DIR="/usr/local/etc/namedb/working"
-BDIR="/usr/local/etc/namedb/working/backup"
+DIR="/tmp"
+BDIR="/tmp/backup"
 FZONE="mkzone"
 RZONE="230.186.136.in-addr.arpa"
 log_file="/tmp/dns_record.log"
@@ -83,8 +87,9 @@ add_record()
     then
         backup_files
         log "Adding Record"
-        echo "$addr    A    $addip" >> $DIR/$FZONE
-        echo "$addr    A    $addip" >> $DIR/$RZONE
+        echo "$addr    IN    A    $addip" >> $DIR/$FZONE
+        PTRIP=`echo $addip | cut -d'.' -f4`
+        echo "$PTRIP    IN    PTR    $addr.$DOMAIN." >> $DIR/$RZONE
         log "DNS record added"
     else
         log "Name OR IP already exist"
@@ -97,8 +102,9 @@ remove_record()
     local remover=$1 removeip=$2;
     backup_files
     log "Removing Record"
-    `sed -iBAK "/$remover    A    $removeip/d" "$DIR/$FZONE"`
-    `sed -iBAK "/$remover    A    $removeip/d" "$DIR/$RZONE"`
+    `sed -iBAK "/$remover    IN    A    $removeip/d" "$DIR/$FZONE"`
+    PTRIP=`echo $addip | cut -d'.' -f4`
+    `sed -iBAK "/$PTRIP    IN    PTR    $remover.$DOMAIN./d" "$DIR/$RZONE"`
     log "DNS record removed"
 }
 
