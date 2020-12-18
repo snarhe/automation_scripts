@@ -17,12 +17,12 @@
 
 pingcheck(){
 	local server=$1
-    pingstatus=`ping $server -c1 >/dev/null; echo $?`
+    pingstatus=`sudo ping $server -c1 >/dev/null; echo $?`
 }
 
 sshcheck(){
 	local server=$1
-	sshstatus=`echo 'exit' | telnet $server 22 &>/dev/null; echo $?`
+	sshstatus=`timeout 5 bash -c "</dev/tcp/$server/22"; echo $?`
 }
 
 filesystemcheck(){
@@ -32,10 +32,10 @@ filesystemcheck(){
         local action=$4
         case $action in
             create)
-                filesystemstatus=`sshpass -p '$3' ssh -q -o StrictHostKeyChecking=no '$2'@'$1' 'touch filesyscheck.txt' ; echo $?`
+                filesystemstatus=`sshpass -p "$password" ssh -q -o StrictHostKeyChecking=no $username@$server 'touch filesyscheck.txt' ; echo $?`
                 ;;
             delete)
-                `sshpass -p '$3' ssh -q -o StrictHostKeyChecking=no '$2'@'$1' 'rm -rf filesyscheck.txt' ; echo $?`
+                `sshpass -p "$password" ssh -q -o StrictHostKeyChecking=no $username@$server 'rm -rf filesyscheck.txt'`
                 ;;
         esac
 }
@@ -63,6 +63,7 @@ validate_tools
 read -p "File name which contain server list: " FILENAME
 read -p "Server user name: " USER
 read -s -p "Server Password: " PASSWORD
+echo
 
 if [[ ! -z $FILENAME && ! -z $USER && ! -z $PASSWORD ]]
 then
@@ -80,13 +81,13 @@ then
                     echo -e "$SERVER:\e[1;32m PING:OK, SSH:OK, FILESYSTEM:OK \e[0m"
                     filesystemcheck $SERVER $USER $PASSWORD "delete"
                 else
-                    echo -e "\e[1;31m $SERVER: PING:KO, SSH:KO, FILESYSTEM:KO \e[0m"
+                    echo -e "$SERVER:\e[1;32m PING:OK, SSH:OK,\e[1;31m FILESYSTEM:KO \e[0m"
                 fi
             else
                 echo -e "$SERVER:\e[1;32m PING:OK,\e[0m \e[1;31m SSH:KO,\e[0m \e[1;33m FILESYSTEM:PENDING \e[0m"
             fi
         else
-            echo -e "$SERVER:\e[1;32m PING:KO,\e[0m \e[1;33m SSH:PENDING, FILESYSTEM:PENDING \e[0m"
+            echo -e "$SERVER:\e[1;31m PING:KO,\e[0m \e[1;33m SSH:PENDING, FILESYSTEM:PENDING \e[0m"
         fi
     done
 else
