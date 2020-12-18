@@ -41,7 +41,7 @@ filesystemcheck(){
 }
 
 validate_tools(){
-    tools=(sshpass telnet)
+    tools=(sshpass)
     for t in "${tools[@]}"
     do
         if type "$t" > /dev/null 2>&1
